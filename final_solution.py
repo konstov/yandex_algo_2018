@@ -27,7 +27,6 @@ def A_B_dist(A_coord, B_coord):
         min_dist, min_coord, z_index = 1000000, [], 0
         for index, z in B_coord.items():
             dist = sqrt((p[0] - z[0]) ** 2 + (p[1] - z[1]) ** 2)
-            # print(p_index, index, dist, min_dist)
             if dist < min_dist:
                 min_dist = dist
                 min_coord = z
@@ -41,7 +40,6 @@ def next_taxi(T_P_dist):
     min_d = 100000
     index_d = 0
     for key, value in T_P_dist.items():
-        # print(value, min_d)
         if value[-1] < min_d:
             min_d, index_d = value[-1], key
     return index_d, T_P_dist[index_d]
@@ -77,25 +75,6 @@ def is_similar_vector(a, b, pos_b):
         return True
     return False
 
-
-def is_similar_vector_new(a, b, pos_b):
-    alpha_2 = sqrt((pow(a[0], 2) + pow(a[1], 2)) * (pow(b[0], 2) + pow(b[1], 2)))
-    if alpha_2 != 0:
-        alpha = (a[0] * b[0] + a[1] * b[1])
-        cos_alpha = alpha / alpha_2
-    else:
-        cos_alpha = 1
-    if cos_alpha > 0.7 and pos_b[0] + a[0] < 10000 and pos_b[1] + a[1] < 10000:
-        return True
-    return False
-
-
-def is_similar_vector_new_(a, b, pos_b):
-    if 2 * (a[0] * b[0] + a[1] * b[1]) > a[0] ** 2 + a[1] ** 2\
-                and pos_b[0] + a[0] < 10000 and pos_b[1] + a[1] < 10000:
-        return True
-    return False
-
 # Генерирование текста для перемещения
 def generate_move(par, taxi_cnt, taxi_numbers):
     if isinstance(taxi_numbers, list):
@@ -116,7 +95,7 @@ P_Z_dist = A_B_dist(P_coord, Z_coord)
 # расстояния от такси до ближаших пассажиров
 T_P_dist = A_B_dist(T_coord, P_coord)
 # список строк с перемещениями
-MovesList = []
+moveslist = []
 movescount = 0
 Z_coord_list = [value for key, value in Z_coord.items()]
 
@@ -129,23 +108,23 @@ for i in range(P):
         taxi_cnt, taxi_numbers = taxi_to_move(t_index, t_par, T_P_dist)
 
         # Изменю координаты такси, если сдвиг приведёт к совпадению, то не буду сдвигать
-        T_coords_list = [value for key, value in T_coord.items()]
+        T_coord_list = [value for key, value in T_coord.items()]
         taxi_numbers_c = taxi_numbers.copy()
         for num in taxi_numbers_c:
             new_coord = [T_coord[num][0] + t_par[2], T_coord[num][1] + t_par[3]]
-            if new_coord not in T_coords_list and new_coord not in Z_coord_list:
+            if new_coord not in T_coord_list and new_coord not in Z_coord_list:
                 T_coord[num] = new_coord
-                T_coords_list = [value for key, value in T_coord.items()]
+                T_coord_list = [value for key, value in T_coord.items()]
             else:
                 taxi_cnt -= 1
                 taxi_numbers.remove(num)
 
         # пересчитаю расстояния после сдвига такси
         T_P_dist = update_dist_A_B(T_P_dist, T_coord, P_coord, taxi_numbers)
-        MovesList.append(generate_move(t_par, taxi_cnt, taxi_numbers))
+        moveslist.append(generate_move(t_par, taxi_cnt, taxi_numbers))
     else:
         t_index, t_par = next_taxi(T_P_dist)
-        MovesList.append(generate_move(t_par, 1, t_index))
+        moveslist.append(generate_move(t_par, 1, t_index))
 
         T_coord[t_index] = [T_coord[t_index][0] + t_par[2], T_coord[t_index][1] + t_par[3]]
         T_P_dist = update_dist_A_B(T_P_dist, T_coord, P_coord, [t_index])
@@ -160,13 +139,13 @@ for i in range(P):
         taxi_cnt, taxi_numbers = taxi_to_move(t_index, p_par, T_P_dist)
 
         # Изменю координаты такси, если сдвиг приведёт к совпадению, то не буду сдвигать
-        T_coords_list = [value for key, value in T_coord.items()]
+        T_coord_list = [value for key, value in T_coord.items()]
         taxi_numbers_c = taxi_numbers.copy()
         for num in taxi_numbers_c:
             new_coord = [T_coord[num][0] + p_par[2], T_coord[num][1] + p_par[3]]
-            if num == t_index or (new_coord not in T_coords_list and new_coord not in Z_coord_list):
+            if num == t_index or (new_coord not in T_coord_list and new_coord not in Z_coord_list):
                 T_coord[num] = new_coord
-                T_coords_list = [value for key, value in T_coord.items()]
+                T_coord_list = [value for key, value in T_coord.items()]
             #new_coord = [T_coord[num][0] + p_par[2], T_coord[num][1] + p_par[3]]
             #if (new_coord not in T_coords_list and new_coord not in Z_coord_list):
             #    T_coord[num] = new_coord
@@ -176,10 +155,10 @@ for i in range(P):
 
         # пересчитаю расстояния после сдвига такси
         T_P_dist = update_dist_A_B(T_P_dist, T_coord, P_coord, taxi_numbers)
-        MovesList.append(generate_move(p_par, taxi_cnt, taxi_numbers))
+        moveslist.append(generate_move(p_par, taxi_cnt, taxi_numbers))
     else:
         p_par = P_Z_dist[t_par[-2]]
-        MovesList.append(generate_move(p_par, 1, t_index))
+        moveslist.append(generate_move(p_par, 1, t_index))
 
         T_coord[t_index] = [T_coord[t_index][0] + p_par[2], T_coord[t_index][1] + p_par[3]]
         T_P_dist = update_dist_A_B(T_P_dist, T_coord, P_coord, [t_index])
@@ -197,7 +176,7 @@ for i in range(P):
                     shift += 1
                     break
 
-        MovesList.append(generate_move([0, 0, shift, 0], 1, t_index))
+        moveslist.append(generate_move([0, 0, shift, 0], 1, t_index))
         T_coord[t_index] = [T_coord[t_index][0] + shift, T_coord[t_index][1]]
         movescount += 1
 
@@ -211,7 +190,7 @@ for i in range(P):
             T_P_dist[key] = A_B_dist({key: T_coord[key]}, P_coord)[key]
 
 print(movescount)
-for i in MovesList:
+for i in moveslist:
     print(i)
 
 # print(time() - start)
